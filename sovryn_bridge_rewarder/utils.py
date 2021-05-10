@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import functools
 import json
 import logging
@@ -11,6 +12,10 @@ from web3.contract import Contract, ContractEvent
 
 THIS_DIR = os.path.dirname(__file__)
 logger = logging.getLogger(__name__)
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 def load_abi(name: str) -> Dict[str, Any]:

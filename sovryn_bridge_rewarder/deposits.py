@@ -40,6 +40,7 @@ def get_deposits(
     web3: Web3,
     from_block: int,
     to_block: int,
+    fee_percentage: Decimal,
 ):
     """
     Load all Deposits (token transfers from another chain to RSK) from the RSK bridge contract
@@ -53,6 +54,7 @@ def get_deposits(
         web3=web3,
         bridge_contract=bridge_contract,
         events=events,
+        fee_percentage=fee_percentage,
     )
 
 
@@ -105,7 +107,7 @@ def parse_deposits_from_events(
     web3: Web3,
     bridge_contract: Contract,
     events: List[Any],
-    fee_percentage: Decimal = Decimal('0.002'),  # This is hard to parse from the contract, so just hardcode
+    fee_percentage: Decimal,  # This is hard to parse from the contract, so just pass it here
 ) -> List[Deposit]:
     # An event looks like this:
     # AttributeDict({

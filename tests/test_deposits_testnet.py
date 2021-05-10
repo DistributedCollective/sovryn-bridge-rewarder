@@ -53,7 +53,8 @@ def test_parse_deposits_from_events(web3, bridge_contract):
     deposits = parse_deposits_from_events(
         web3=web3,
         bridge_contract=bridge_contract,
-        events=EXAMPLE_CROSS_TRANSFER_EVENTS
+        events=EXAMPLE_CROSS_TRANSFER_EVENTS,
+        fee_percentage=Decimal('0.002'),
     )
     assert deposits == [
         Deposit(**{

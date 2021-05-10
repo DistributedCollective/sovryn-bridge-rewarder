@@ -1,17 +1,18 @@
 import logging
 from time import sleep
-from typing import Union, Type
+from typing import Union
 
 import sqlalchemy
-from eth_typing import Address, AnyAddress
-from sqlalchemy.orm import sessionmaker, Session
+from eth_typing import AnyAddress
+from sqlalchemy.orm import Session, sessionmaker
 from web3 import Web3
 from web3.contract import Contract
 
 from .config import Config
 from .deposits import get_deposits
-from .utils import address, load_abi
 from .models import Base, BlockInfo
+from .rewards import queue_reward
+from .utils import address, load_abi
 
 logger = logging.getLogger(__name__)
 BRIDGE_ABI = load_abi('Bridge.json')
@@ -48,11 +49,17 @@ def run_rewarder(config: Config):
             web3=web3,
             from_block=start_block,
             to_block=to_block,
+            fee_percentage=config.deposit_fee_percentage,
         )
-        print('deposits')
-        print(deposits)
+        logger.info("Found %s deposits", len(deposits))
         with DBSession.begin() as dbsession:
-            # TODO: queue rewards
+            for deposit in deposits:
+                queue_reward(
+                    deposit=deposit,
+                    dbsession=dbsession,
+                    reward_amount_rbtc=config.reward_rbtc,
+                    deposit_thresholds=config.reward_thresholds,
+                )
             last_processed_block = to_block
             update_last_processed_block(dbsession, last_processed_block)
             start_block = last_processed_block + 1

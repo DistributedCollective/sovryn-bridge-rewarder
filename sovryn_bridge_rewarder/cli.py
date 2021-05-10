@@ -5,6 +5,7 @@ import os
 import click
 
 from .main import run_rewarder
+from .config import load_from_json
 
 
 @click.command('sovryn_bridge_rewarder')
@@ -17,13 +18,9 @@ def main(context, config_file: str):
     if not os.path.exists(config_file):
         context.fail(f'config file not found at path {config_file!r}')
     with open(config_file) as f:
-        config = json.load(f)
+        config_json = json.load(f)
+        config = load_from_json(config_json)
 
     logging.basicConfig(level=logging.INFO)
     click.echo('Starting rewarder bot')
-    run_rewarder(
-        bridge_address=config['bridge'],
-        rpc_url=config['host'],
-        default_start_block=config['fromBlock'],
-        required_block_confirmations=config['requiredBlockConfirmations'],
-    )
+    run_rewarder(config)

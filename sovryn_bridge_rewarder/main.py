@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from web3 import Web3
 from web3.contract import Contract
 
+from .config import Config
 from .deposits import get_deposits
 from .utils import address, load_abi
 from .models import Base, BlockInfo
@@ -16,37 +17,31 @@ logger = logging.getLogger(__name__)
 BRIDGE_ABI = load_abi('Bridge.json')
 
 
-def run_rewarder(
-    *,
-    bridge_address: Address,
-    rpc_url: str,
-    default_start_block: int,
-    required_block_confirmations: int,
-    db_url: str = 'sqlite:///db.sqlite3',  # TODO: better default or no default
-    sleep_seconds: int = 30,
-):
+def run_rewarder(config: Config):
     logger.info('Starting rewarder')
-    DBSession = init_sqlalchemy(db_url, create_models=True)
+    DBSession = init_sqlalchemy(config.db_url, create_models=True)
 
-    web3 = Web3(Web3.HTTPProvider(rpc_url))
-    logger.info('Connected to chain %s, rpc url: %s', web3.eth.chain_id, rpc_url)
+    web3 = Web3(Web3.HTTPProvider(config.rpc_url))
+    logger.info('Connected to chain %s, rpc url: %s', web3.eth.chain_id, config.rpc_url)
 
     bridge_contract = get_bridge_contract(
-        bridge_address=bridge_address,
+        bridge_address=config.bridge_address,
         web3=web3
     )
 
     with DBSession.begin() as dbsession:
-        start_block = get_start_block(dbsession, default_start_block)
+        start_block = get_start_block(dbsession, config.default_start_block)
 
     while True:
         current_block = web3.eth.get_block_number()
-        to_block = current_block - required_block_confirmations
+        to_block = current_block - config.required_block_confirmations
         logger.info('Starting round from %s to %s', start_block, to_block)
 
         if to_block < start_block:
             logger.info('to_block %s is smaller than start_block %s, not doing anything', to_block, start_block)
-            return
+            logger.info('Round complete, sleeping %s s', config.sleep_seconds)
+            sleep(config.sleep_seconds)
+            continue
 
         deposits = get_deposits(
             bridge_contract=bridge_contract,
@@ -61,8 +56,8 @@ def run_rewarder(
             last_processed_block = to_block
             update_last_processed_block(dbsession, last_processed_block)
             start_block = last_processed_block + 1
-        logger.info('Round complete, sleeping %s s', sleep_seconds)
-        sleep(sleep_seconds)
+        logger.info('Round complete, sleeping %s s', config.sleep_seconds)
+        sleep(config.sleep_seconds)
 
 
 def get_bridge_contract(*, bridge_address: Union[str, AnyAddress], web3: Web3) -> Contract:

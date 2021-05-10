@@ -11,7 +11,11 @@ setup(
     ]},
     install_requires=[
         'web3',
+        'eth_typing',
+        'eth_utils',
         'sqlalchemy',
+        'click',
+
     ],
     extras_require={
         'dev': [
@@ -25,7 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'sovryn_bridge_rewarder=sovryn_bridge_rewarder.main:main',
+            'sovryn_bridge_rewarder=sovryn_bridge_rewarder.cli:main',
         ]
     },
 )

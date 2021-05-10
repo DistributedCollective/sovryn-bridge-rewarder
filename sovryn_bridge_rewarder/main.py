@@ -1,6 +1,6 @@
 import logging
 from time import sleep
-from typing import Union
+from typing import Optional, Union
 
 import sqlalchemy
 from eth_typing import AnyAddress
@@ -34,37 +34,56 @@ def run_rewarder(config: Config):
         start_block = get_start_block(dbsession, config.default_start_block)
 
     while True:
-        current_block = web3.eth.get_block_number()
-        to_block = current_block - config.required_block_confirmations
-        logger.info('Starting round from %s to %s', start_block, to_block)
-
-        if to_block < start_block:
-            logger.info('to_block %s is smaller than start_block %s, not doing anything', to_block, start_block)
-            logger.info('Round complete, sleeping %s s', config.sleep_seconds)
-            sleep(config.sleep_seconds)
-            continue
-
-        deposits = get_deposits(
-            bridge_contract=bridge_contract,
+        logger.info('Starting rewarder round')
+        new_start_block = process_new_deposits(
             web3=web3,
-            from_block=start_block,
-            to_block=to_block,
-            fee_percentage=config.deposit_fee_percentage,
+            bridge_contract=bridge_contract,
+            DBSession=DBSession,
+            config=config,
+            start_block=start_block,
         )
-        logger.info("Found %s deposits", len(deposits))
-        with DBSession.begin() as dbsession:
-            for deposit in deposits:
-                queue_reward(
-                    deposit=deposit,
-                    dbsession=dbsession,
-                    reward_amount_rbtc=config.reward_rbtc,
-                    deposit_thresholds=config.reward_thresholds,
-                )
-            last_processed_block = to_block
-            update_last_processed_block(dbsession, last_processed_block)
-            start_block = last_processed_block + 1
+        if new_start_block:
+            start_block = new_start_block
         logger.info('Round complete, sleeping %s s', config.sleep_seconds)
         sleep(config.sleep_seconds)
+
+
+def process_new_deposits(
+    *,
+    web3: Web3,
+    bridge_contract: Contract,
+    DBSession: sessionmaker,
+    config: Config,
+    start_block: int,
+) -> Optional[int]:
+    current_block = web3.eth.get_block_number()
+    to_block = current_block - config.required_block_confirmations
+    logger.info('Processing new deposits from %s to %s', start_block, to_block)
+
+    if to_block < start_block:
+        logger.info('to_block %s is smaller than start_block %s, not doing anything', to_block, start_block)
+        return None
+
+    deposits = get_deposits(
+        bridge_contract=bridge_contract,
+        web3=web3,
+        from_block=start_block,
+        to_block=to_block,
+        fee_percentage=config.deposit_fee_percentage,
+    )
+    logger.info("Found %s deposits", len(deposits))
+    with DBSession.begin() as dbsession:
+        for deposit in deposits:
+            queue_reward(
+                deposit=deposit,
+                dbsession=dbsession,
+                reward_amount_rbtc=config.reward_rbtc,
+                deposit_thresholds=config.reward_thresholds,
+            )
+        last_processed_block = to_block
+        update_last_processed_block(dbsession, last_processed_block)
+        start_block = last_processed_block + 1
+        return start_block
 
 
 def get_bridge_contract(*, bridge_address: Union[str, AnyAddress], web3: Web3) -> Contract:

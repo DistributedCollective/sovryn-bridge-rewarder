@@ -28,6 +28,9 @@ class Deposit:
     main_token_address: str  # the token in the other chain
     amount_minus_fees_wei: int
     amount_decimal: Decimal  # Amount without fees in "real" units, decimal adjusted
+    block_hash: str
+    transaction_hash: str
+    log_index: int
     event: Any = None  # For debugging
 
 
@@ -148,6 +151,9 @@ def parse_deposits_from_events(
             main_token_address=main_token_address,
             amount_minus_fees_wei=amount_minus_fees_wei,
             amount_decimal=amount_decimal,
+            block_hash=event.blockHash.hex().lower(),
+            transaction_hash=event.transactionHash.hex().lower(),
+            log_index=event.logIndex,
             #event=event,
         )
         ret.append(deposit)

@@ -24,6 +24,6 @@ def main(context, config_file: str):
     run_rewarder(
         bridge_address=config['bridge'],
         rpc_url=config['host'],
-        start_block=config['fromBlock'],
+        default_start_block=config['fromBlock'],
         required_block_confirmations=config['requiredBlockConfirmations'],
     )

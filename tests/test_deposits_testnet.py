@@ -55,33 +55,41 @@ def test_parse_deposits_from_events(web3, bridge_contract):
         bridge_contract=bridge_contract,
         events=EXAMPLE_CROSS_TRANSFER_EVENTS
     )
-    #pprint_improved(deposits)
     assert deposits == [
         Deposit(**{
             'amount_decimal': Decimal('2.5'),
-             'amount_minus_fees_wei': 2495000000000000000,
-             'event': None,
-             'main_token_address': '0x83241490517384cb28382bdd4d1534ee54d9350f',
-             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
-             'side_token_symbol': 'DAIbs',
-             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
-        }),
-        Deposit(**{
-            'amount_decimal': Decimal('3'),
-            'amount_minus_fees_wei': 2994000000000000000,
+            'amount_minus_fees_wei': 2495000000000000000,
+            'block_hash': '0x11dcc6cd8198159ae7fdf252a42101ad20fc50c614981d3291e562367f66791a',
             'event': None,
+            'log_index': 7,
             'main_token_address': '0x83241490517384cb28382bdd4d1534ee54d9350f',
             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
             'side_token_symbol': 'DAIbs',
+            'transaction_hash': '0x0462cb7f734cd277d087a80205b4098ed4e447ec3c7847b68652dd2994a44980',
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         }),
         Deposit(**{
             'amount_decimal': Decimal('3'),
             'amount_minus_fees_wei': 2994000000000000000,
+            'block_hash': '0x284b7a205246897df0f416ed17dab9aa90c9dbedc8448dd7a13626e405906010',
             'event': None,
+            'log_index': 3,
             'main_token_address': '0x83241490517384cb28382bdd4d1534ee54d9350f',
             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
             'side_token_symbol': 'DAIbs',
+            'transaction_hash': '0x79e1e0211c0832e55e29dc6b31e0be8e2aded15ee2783a8c7d5f1032ad7eddbd',
+            'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
+        }),
+        Deposit(**{
+            'amount_decimal': Decimal('3'),
+            'amount_minus_fees_wei': 2994000000000000000,
+            'block_hash': '0x614b75ba52cbe0a643850b909a0cd29b9032a116059849f148e631e0e5764a52',
+            'event': None,
+            'log_index': 3,
+            'main_token_address': '0x83241490517384cb28382bdd4d1534ee54d9350f',
+            'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
+            'side_token_symbol': 'DAIbs',
+            'transaction_hash': '0x05f16236ee5ca06311f4a014b9fcaa40a32389c6c95b86267ab0bfcbc5616972',
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         })
     ]

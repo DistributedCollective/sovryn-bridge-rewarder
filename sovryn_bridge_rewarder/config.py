@@ -23,6 +23,7 @@ class Config:
     reward_thresholds: RewardThresholdTable
     account: BaseAccount = field(repr=False)
     sleep_seconds: int = 30
+    explorer_url: str = 'https://explorer.rsk.co'
 
     def validate(self):
         for field in fields(self):
@@ -76,6 +77,7 @@ def load_from_json(json_dict) -> Config:
             reward_rbtc=Decimal(json_dict['rewardRbtc']),
             reward_thresholds=reward_thresholds,
             sleep_seconds=json_dict.get('sleepSeconds', Config.sleep_seconds),
+            explorer_url=json_dict.get('explorerUrl', Config.explorer_url),
             account=account,
         )
     except KeyError as e:

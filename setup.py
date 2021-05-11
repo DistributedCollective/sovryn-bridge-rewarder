@@ -17,6 +17,7 @@ setup(
         'eth_utils',
         'sqlalchemy',
         'click',
+        'justpy',
     ],
     extras_require={
         'dev': [

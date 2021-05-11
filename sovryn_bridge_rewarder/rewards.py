@@ -6,6 +6,7 @@ from decimal import Decimal
 import logging
 from typing import List, Optional
 
+from eth_account.signers.base import BaseAccount
 from hexbytes import HexBytes
 from sqlalchemy import func
 from sqlalchemy.orm.session import Session, sessionmaker
@@ -71,7 +72,7 @@ def send_queued_rewards(
     *,
     web3: Web3,
     DBSession: sessionmaker,
-    from_address: str,
+    from_account: BaseAccount,
 ):
     with DBSession.begin() as dbsession:
         reward_ids = get_queued_reward_ids(dbsession)
@@ -87,7 +88,7 @@ def send_queued_rewards(
             reward_id=reward_id,
             web3=web3,
             DBSession=DBSession,
-            from_address=from_address,
+            from_account=from_account,
             nonce=nonce,
         )
         if not transaction_hash:
@@ -117,12 +118,13 @@ def send_reward(
     *,
     web3: Web3,
     DBSession: sessionmaker,
-    from_address: str,
+    from_account: BaseAccount,
     reward_id: int,
     nonce: int,
 ) -> Optional[HexBytes]:
     gas_price = web3.eth.gas_price
     gas_costs = gas_price * 21000 * 2
+    from_address = from_account.address.lower()
     sender_rbtc_balance = web3.eth.get_balance(address(from_address))
 
     with DBSession.begin() as dbsession:
@@ -146,21 +148,22 @@ def send_reward(
             )
             return
 
-        reward.status = RewardStatus.sending
-        reward.reward_transaction_nonce = nonce
-        reward.sent_at = utcnow()
-
         user_address = reward.user_address
         amount_wei = reward.reward_rbtc_wei
-
-    @retryable()
-    def submit_transaction():
-        return web3.eth.send_transaction({
+        signed_transaction = from_account.sign_transaction({
             'from': address(from_address),
             'to': address(user_address),
             'value': amount_wei,
             'nonce': nonce,
         })
+
+        reward.status = RewardStatus.sending
+        reward.reward_transaction_nonce = nonce
+        reward.sent_at = utcnow()
+
+    @retryable()
+    def submit_transaction():
+        return web3.eth.send_raw_transaction(signed_transaction)
 
     try:
         transaction_hash = submit_transaction()

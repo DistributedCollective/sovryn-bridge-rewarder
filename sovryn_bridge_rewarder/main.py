@@ -24,6 +24,8 @@ def run_rewarder(config: Config):
 
     web3 = Web3(Web3.HTTPProvider(config.rpc_url))
     logger.info('Connected to chain %s, rpc url: %s', web3.eth.chain_id, config.rpc_url)
+    logger.info('Rewarder account is %s', config.account.address.lower())
+    logger.info('Bridge contract is %s', config.bridge_address)
     gas_price = web3.eth.gas_price
     logger.info('Gas price: %s (%s Gwei)', gas_price, gas_price * 10**9 / 10**18)
 
@@ -32,9 +34,15 @@ def run_rewarder(config: Config):
         web3=web3
     )
 
+    # Clear any existing rewards
+    send_queued_rewards(
+        web3=web3,
+        DBSession=DBSession,
+        from_account=config.account,
+    )
+
     with DBSession.begin() as dbsession:
         start_block = get_start_block(dbsession, config.default_start_block)
-
     while True:
         logger.info('Starting rewarder round')
         new_start_block = process_new_deposits(
@@ -46,6 +54,12 @@ def run_rewarder(config: Config):
         )
         if new_start_block:
             start_block = new_start_block
+
+        send_queued_rewards(
+            web3=web3,
+            DBSession=DBSession,
+            from_account=config.account,
+        )
         logger.info('Round complete, sleeping %s s', config.sleep_seconds)
         sleep(config.sleep_seconds)
 

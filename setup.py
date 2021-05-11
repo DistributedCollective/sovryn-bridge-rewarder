@@ -11,9 +11,10 @@ setup(
     ]},
     install_requires=[
         'web3',
+        'hexbytes',
+        'eth_account',
         'eth_typing',
         'eth_utils',
-        'hexbytes',
         'sqlalchemy',
         'click',
     ],

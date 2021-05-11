@@ -27,7 +27,7 @@ def run_rewarder(config: Config):
     logger.info('Rewarder account is %s', config.account.address.lower())
     logger.info('Bridge contract is %s', config.bridge_address)
     gas_price = web3.eth.gas_price
-    logger.info('Gas price: %s (%s Gwei)', gas_price, gas_price * 10**9 / 10**18)
+    logger.info('Gas price: %s (%s GWei)', gas_price, gas_price * 10**9 / 10**18)
 
     bridge_contract = get_bridge_contract(
         bridge_address=config.bridge_address,

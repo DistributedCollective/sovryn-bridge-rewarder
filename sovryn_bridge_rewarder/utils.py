@@ -75,7 +75,7 @@ def exponential_sleep(attempt, max_sleep_time=256.0):
     sleep(sleep_time)
 
 
-def retryable(*, max_attempts: int = 5):
+def retryable(*, max_attempts: int = 10):
     def decorator(func):
         @functools.wraps(func)
         def wrapped(*args, **kwargs):

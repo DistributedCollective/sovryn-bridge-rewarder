@@ -75,13 +75,19 @@ def send_queued_rewards(
     from_account: BaseAccount,
 ):
     with DBSession.begin() as dbsession:
+        num_sending = dbsession.query(Reward).filter_by(status=RewardStatus.sending).count()
         reward_ids = get_queued_reward_ids(dbsession)
+    if num_sending:
+        logger.warning('There are %s rewards with status = sending which should not happen', num_sending)
     if not reward_ids:
         logger.info('No queued rewards found.')
         return
 
     logger.info('%s rewards in queue -- sending', len(reward_ids))
-    nonce = web3.eth.get_transaction_count('pending')
+    nonce = web3.eth.get_transaction_count(
+        address(from_account.address),
+        block_identifier='pending'
+    )
     pending_transactions = []
     for reward_id in reward_ids:
         transaction_hash = send_reward(
@@ -123,7 +129,10 @@ def send_reward(
     nonce: int,
 ) -> Optional[HexBytes]:
     gas_price = web3.eth.gas_price
-    gas_costs = gas_price * 21000 * 2
+    if gas_price > 10 * 10**9:  # greater than 10 GWei
+        raise ValueError(f'gas price {gas_price} dangerously high, makes no sense')
+    gas_limit = 21000
+    gas_costs = gas_price * gas_limit * 2
     from_address = from_account.address.lower()
     sender_rbtc_balance = web3.eth.get_balance(address(from_address))
 
@@ -155,6 +164,8 @@ def send_reward(
             'to': address(user_address),
             'value': amount_wei,
             'nonce': nonce,
+            'gasPrice': gas_price,
+            'gas': gas_limit,
         })
 
         reward.status = RewardStatus.sending
@@ -163,7 +174,8 @@ def send_reward(
 
     @retryable()
     def submit_transaction():
-        return web3.eth.send_raw_transaction(signed_transaction)
+        tx_hash = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+        return HexBytes(tx_hash)
 
     try:
         transaction_hash = submit_transaction()
@@ -193,7 +205,7 @@ def confirm_rewards(
     Wait (sequentially) for all given transactions and confirm in DB
     """
     for transaction_hash in transaction_hashes:
-        logger.info('Waiting for transaction %s...', transaction_hash)
+        logger.info('Waiting for transaction %s...', transaction_hash.hex())
         receipt = web3.eth.wait_for_transaction_receipt(transaction_hash, timeout=256, poll_latency=1)
         with DBSession.begin() as dbsession:
             reward = dbsession.query(Reward).filter_by(reward_transaction_hash=transaction_hash.hex()).one_or_none()

@@ -1,3 +1,5 @@
+addict==2.4.0
+aiofiles==0.6.0
 appnope==0.1.2
 attrs==21.2.0
 backcall==0.2.0
@@ -8,6 +10,7 @@ chardet==4.0.0
 click==7.1.2
 cytoolz==0.11.0
 decorator==5.0.7
+demjson==2.2.4
 eth-abi==2.1.1
 eth-account==0.5.4
 eth-hash==0.3.1
@@ -17,16 +20,23 @@ eth-rlp==0.2.1
 eth-typing==2.2.2
 eth-utils==1.10.0
 greenlet==1.1.0
+h11==0.12.0
 hexbytes==0.2.1
+httpcore==0.13.3
+httpx==0.18.1
 idna==2.10
 iniconfig==1.1.1
 ipdb==0.13.7
 ipfshttpclient==0.7.0a1
 ipython==7.23.1
 ipython-genutils==0.2.0
+itsdangerous==1.1.0
 jedi==0.18.0
+Jinja2==2.11.3
 jsonschema==3.2.0
+justpy==0.1.5
 lru-dict==1.1.7
+MarkupSafe==1.1.1
 matplotlib-inline==0.1.2
 multiaddr==0.0.9
 netaddr==0.8.0
@@ -46,15 +56,17 @@ pyparsing==2.4.7
 pyrsistent==0.17.3
 pytest==6.2.4
 requests==2.25.1
+rfc3986==1.5.0
 rlp==2.0.1
 six==1.16.0
-# Editable Git install with no remote (sovryn-bridge-rewarder==0.0.1)
--e /Users/koirikivi/work/sovryn/bridge-rewarder
+sniffio==1.2.0
 SQLAlchemy==1.4.14
+starlette==0.14.2
 toml==0.10.2
 toolz==0.11.1
 traitlets==5.0.5
 urllib3==1.26.4
+uvicorn==0.13.4
 varint==1.0.2
 wcwidth==0.2.5
 web3==5.19.0

@@ -8,8 +8,13 @@
   "depositFeePercentage": "0.002",
   "rewardRbtc": "0.0001",
   "rewardThresholds": {
+    "DAIes": "100.0",
+    "USDCes": "100.0",
+    "USDTes": "100.0",
+    "ETHes": "0.025",
     "DAIbs": "100.0",
-    "WETH": "0.25"
+    "USDTbs": "100.0",
+    "USDCbs": "100.0"
   },
   "keyStoreFile": "./secrets/testnet_keystore.json",
 }

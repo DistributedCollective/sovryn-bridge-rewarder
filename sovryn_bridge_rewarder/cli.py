@@ -40,6 +40,7 @@ def main(context, config_file: str, rewarder: bool, ui: bool):
 
 
 def _start_ui(config):
+    os.environ.setdefault('DEBUG', '0')
     from .ui.ui_main import run_ui
     run_ui(config)
 

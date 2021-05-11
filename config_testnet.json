@@ -16,5 +16,5 @@
     "USDTbs": "100.0",
     "USDCbs": "100.0"
   },
-  "keyStoreFile": "./secrets/testnet_keystore.json",
+  "keyStoreFile": "./secrets/testnet_keystore.json"
 }

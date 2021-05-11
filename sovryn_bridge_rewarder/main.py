@@ -11,7 +11,7 @@ from web3.contract import Contract
 from .config import Config
 from .deposits import get_deposits
 from .models import Base, BlockInfo
-from .rewards import queue_reward
+from .rewards import queue_reward, send_queued_rewards
 from .utils import address, load_abi
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ def run_rewarder(config: Config):
 
     web3 = Web3(Web3.HTTPProvider(config.rpc_url))
     logger.info('Connected to chain %s, rpc url: %s', web3.eth.chain_id, config.rpc_url)
+    gas_price = web3.eth.gas_price
+    logger.info('Gas price: %s (%s Gwei)', gas_price, gas_price * 10**9 / 10**18)
 
     bridge_contract = get_bridge_contract(
         bridge_address=config.bridge_address,

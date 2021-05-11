@@ -13,9 +13,9 @@ setup(
         'web3',
         'eth_typing',
         'eth_utils',
+        'hexbytes',
         'sqlalchemy',
         'click',
-
     ],
     extras_require={
         'dev': [

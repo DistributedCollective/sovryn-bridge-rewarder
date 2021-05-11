@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 import functools
 import json
 import logging
-from typing import Dict, Any, Union
 import os
+from time import sleep
+from typing import Dict, Any, Union
 
 from eth_typing import AnyAddress
 from eth_utils import to_checksum_address
@@ -24,6 +25,9 @@ def load_abi(name: str) -> Dict[str, Any]:
 
 
 def address(a: Union[bytes, str]) -> AnyAddress:
+    # Web3.py expects checksummed addresses, but has no support for EIP-1191,
+    # so RSK-checksummed addresses are broken
+    # Should instead fix web3, but meanwhile this wrapper will help us
     return to_checksum_address(a)
 
 
@@ -64,3 +68,32 @@ def get_events(
         ret.extend(events)
         batch_from_block = batch_to_block + 1
     return ret
+
+
+def exponential_sleep(attempt, max_sleep_time=256.0):
+    sleep_time = min(2 ** attempt, max_sleep_time)
+    sleep(sleep_time)
+
+
+def retryable(*, max_attempts: int = 5):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            attempt = 0
+            while True:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt >= max_attempts:
+                        logger.warning('max attempts (%s) exchusted for error: %s', max_attempts, e)
+                        raise
+                    logger.warning(
+                        'Retryable error (attempt: %s/%s): %s',
+                        attempt + 1,
+                        max_attempts,
+                        e,
+                    )
+                    exponential_sleep(attempt)
+                    attempt += 1
+        return wrapped
+    return decorator

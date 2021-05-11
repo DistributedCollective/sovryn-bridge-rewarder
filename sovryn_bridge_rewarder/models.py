@@ -20,7 +20,8 @@ class RewardStatus(Enum):
     sending = 'sending'
     sent = 'sent'
     confirmed = 'confirmed'
-    error = 'error'
+    error_sending = 'error_sending'
+    error_confirming = 'error_confirming'
 
 
 class Reward(Base):
@@ -40,12 +41,13 @@ class Reward(Base):
     _deposit_amount_minus_fees_wei = Column('deposit_amount_minus_fees_wei', Text, nullable=False)  # Text for sqlite
     deposit_log_index = Column(Integer, nullable=False)
     deposit_block_hash = Column(Text, nullable=False)
-    deposit_transaction_hash = Column(Text, nullable=False)
+    deposit_transaction_hash = Column(Text, nullable=False, index=True)
 
     # Maybe not needed
     #deposit_token_address = Column(Text, nullable=False)
 
     reward_transaction_hash = Column(Text, nullable=True)
+    reward_transaction_nonce = Column(Integer, nullable=True)
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
     sent_at = Column(DateTime(timezone=True), nullable=True)

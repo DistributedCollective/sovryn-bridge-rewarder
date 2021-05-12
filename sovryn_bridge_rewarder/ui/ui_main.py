@@ -75,7 +75,7 @@ def run_ui(config: Config):
             ).limit(50).all()
 
             meta_info.delete_components()
-            jp.parse_html(
+            column1 = jp.parse_html(
                 f"""
                 <div class="column">
                     <div class="item">
@@ -97,14 +97,6 @@ def run_ui(config: Config):
                         </div>
                     </div>
                     <div class="item">
-                        <div class="key">Bridge address</div>
-                        <div class="value">
-                            <a href="{config.explorer_url}/address/{config.bridge_address}" target="_blank">
-                                {config.bridge_address}
-                            </a>
-                        </div>
-                    </div>
-                    <div class="item">
                         <div class="key">RPC Url</div>
                         <div class="value">
                             {config.rpc_url}
@@ -114,9 +106,20 @@ def run_ui(config: Config):
                 """,
                 a=meta_info
             )
-            column = jp.Div(classes="column", a=meta_info)
+            for bridge_key, bridge_address in config.bridge_addresses.items():
+                jp.parse_html(f"""
+                    <div class="item">
+                        <div class="key">Bridge address ({bridge_key})</div>
+                        <div class="value">
+                            <a href="{config.explorer_url}/address/{bridge_address}" target="_blank">
+                                {bridge_address}
+                            </a>
+                        </div>
+                    </div>
+                """, a=column1)
+            column2 = jp.Div(classes="column", a=meta_info)
             for symbol, threshold in config.reward_thresholds.items():
-                item = jp.Div(classes="item", a=column)
+                item = jp.Div(classes="item", a=column2)
                 jp.Div(
                     text=f'{symbol} threshold',
                     classes="key",

@@ -1,9 +1,10 @@
 {
   "bridgeAddress": "0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156",
   "rpcUrl": "https://testnet.sovryn.app/rpc",
-  "dbUrl": "sqlite:///db/testnet.sqlite3",
+  "dbUrl": "postgresql://localhost/bridge_testnet",
   "explorerUrl": "https://explorer.testnet.rsk.co",
-  "defaultStartBlock": 1745634,
+  "xdefaultStartBlock": 1745634,
+  "defaultStartBlock": 1837023,
   "requiredBlockConfirmations": 2,
   "depositFeePercentage": "0.002",
   "rewardRbtc": "0.0001",

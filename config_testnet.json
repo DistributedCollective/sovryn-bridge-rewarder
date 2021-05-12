@@ -1,7 +1,7 @@
 {
   "bridgeAddress": "0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156",
   "rpcUrl": "https://testnet.sovryn.app/rpc",
-  "dbUrl": "postgresql://localhost/bridge_testnet",
+  "dbUrl": "postgresql:///bridge_testnet",
   "explorerUrl": "https://explorer.testnet.rsk.co",
   "xdefaultStartBlock": 1745634,
   "defaultStartBlock": 1837023,

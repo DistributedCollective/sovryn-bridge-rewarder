@@ -173,7 +173,7 @@ def run_ui(config: Config):
     async def app():
         return page
 
-    jp.justpy(app, startup=startup)
+    jp.justpy(app, startup=startup, host="0.0.0.0", port=8000)
 
 
 STYLES = """

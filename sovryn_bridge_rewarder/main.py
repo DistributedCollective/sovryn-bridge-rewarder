@@ -11,7 +11,7 @@ from web3.contract import Contract
 from .config import Config
 from .deposits import get_deposits
 from .models import Base, BlockInfo
-from .rewards import queue_reward, send_queued_rewards
+from .rewards import queue_reward, confirm_unconfirmed_rewards, send_queued_rewards
 from .utils import address, load_abi
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,10 @@ def run_rewarder(config: Config):
         )
 
     # Clear any existing rewards
+    confirm_unconfirmed_rewards(
+        web3=web3,
+        DBSession=DBSession,
+    )
     send_queued_rewards(
         web3=web3,
         DBSession=DBSession,

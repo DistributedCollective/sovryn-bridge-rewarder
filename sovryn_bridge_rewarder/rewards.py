@@ -68,6 +68,23 @@ def get_queued_reward_ids(dbsession: Session):
     return [r.id for r in q]
 
 
+def confirm_unconfirmed_rewards(
+    *,
+    web3: Web3,
+    DBSession: sessionmaker,
+):
+    with DBSession.begin() as dbsession:
+        q = dbsession.query(Reward.reward_transaction_hash).filter_by(status=RewardStatus.sent).all()
+        transaction_hashes = [r.reward_transaction_hash for r in q]
+    if transaction_hashes:
+        logger.info("Confirming %s previously unconfirmed transactions...", len(transaction_hashes))
+        confirm_rewards(
+            web3=web3,
+            transaction_hashes=[HexBytes(t) for t in transaction_hashes],
+            DBSession=DBSession,
+        )
+
+
 def send_queued_rewards(
     *,
     web3: Web3,

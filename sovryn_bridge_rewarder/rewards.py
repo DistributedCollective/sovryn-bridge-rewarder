@@ -12,7 +12,7 @@ from sqlalchemy import func
 from sqlalchemy.orm.session import Session, sessionmaker
 from web3 import Web3
 
-from .config import RewardThresholdTable
+from .config import RewardThresholdMap
 from .deposits import Deposit
 from .models import Reward, RewardStatus
 from .utils import address, retryable, utcnow
@@ -26,7 +26,7 @@ def queue_reward(
     deposit: Deposit,
     dbsession: Session,
     reward_amount_rbtc: Decimal,
-    deposit_thresholds: RewardThresholdTable,
+    deposit_thresholds: RewardThresholdMap,
 ):
     threshold = deposit_thresholds.get(deposit.side_token_symbol)
     if not threshold:

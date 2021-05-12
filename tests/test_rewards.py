@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from sovryn_bridge_rewarder.models import Reward, RewardStatus
 from sovryn_bridge_rewarder.deposits import Deposit
-from sovryn_bridge_rewarder.config import RewardThresholdTable
+from sovryn_bridge_rewarder.config import RewardThresholdMap
 from sovryn_bridge_rewarder.rewards import (
     queue_reward,
     get_queued_reward_ids,
@@ -51,7 +51,7 @@ def test_queue_reward_threshold_not_met(dbsession: Session):
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
         reward_amount_rbtc=Decimal('0.01'),
-        deposit_thresholds=RewardThresholdTable({
+        deposit_thresholds=RewardThresholdMap({
             'DAIbs': Decimal('30.01'),
         })
     )
@@ -63,7 +63,7 @@ def test_queue_reward_token_not_found(dbsession: Session):
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
         reward_amount_rbtc=Decimal('0.01'),
-        deposit_thresholds=RewardThresholdTable({
+        deposit_thresholds=RewardThresholdMap({
             'FOO': Decimal('30.00'),
         })
     )
@@ -75,7 +75,7 @@ def test_queue_reward_threshold_is_met(dbsession: Session):
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
         reward_amount_rbtc=Decimal('0.01'),
-        deposit_thresholds=RewardThresholdTable({
+        deposit_thresholds=RewardThresholdMap({
             'DAIbs': Decimal('30.00'),
         })
     )
@@ -103,7 +103,7 @@ def test_reward_not_queued_twice(dbsession: Session):
             deposit=EXAMPLE_DEPOSIT,
             dbsession=dbsession,
             reward_amount_rbtc=Decimal('0.01'),
-            deposit_thresholds=RewardThresholdTable({
+            deposit_thresholds=RewardThresholdMap({
                 'DAIbs': Decimal('30.00'),
             })
         )
@@ -125,7 +125,7 @@ def test_reward_not_queued_twice(dbsession: Session):
 
 def test_queue_multiple_rewards(dbsession):
     reward_amount_rbtc = Decimal('0.01')
-    deposit_thresholds = RewardThresholdTable({
+    deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
     })
     queue_reward(
@@ -148,7 +148,7 @@ def test_queue_multiple_rewards(dbsession):
 
 def test_reward_not_queued_again_for_same_user(dbsession):
     reward_amount_rbtc = Decimal('0.01')
-    deposit_thresholds = RewardThresholdTable({
+    deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
     })
     queue_reward(
@@ -170,7 +170,7 @@ def test_reward_not_queued_again_for_same_user(dbsession):
 
 def test_get_queued_reward_ids(dbsession):
     reward_amount_rbtc = Decimal('0.01')
-    deposit_thresholds = RewardThresholdTable({
+    deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
     })
     reward_1 = queue_reward(

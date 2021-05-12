@@ -1,6 +1,6 @@
 import logging
 from time import sleep
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import sqlalchemy
 from eth_typing import AnyAddress
@@ -24,15 +24,16 @@ def run_rewarder(config: Config):
 
     web3 = Web3(Web3.HTTPProvider(config.rpc_url))
     logger.info('Connected to chain %s, rpc url: %s', web3.eth.chain_id, config.rpc_url)
-    logger.info('Rewarder account is %s', config.account.address.lower())
-    logger.info('Bridge contract is %s', config.bridge_address)
     gas_price = web3.eth.gas_price
     logger.info('Gas price: %s (%s GWei)', gas_price, gas_price * 10**9 / 10**18)
-
-    bridge_contract = get_bridge_contract(
-        bridge_address=config.bridge_address,
-        web3=web3
-    )
+    bridge_contracts = {}
+    logger.info('Rewarder account is %s', config.account.address.lower())
+    for k, v in config.bridge_addresses.items():
+        logger.info('Bridge contract for %s is %s', k, v)
+        bridge_contracts[k] = get_bridge_contract(
+            bridge_address=v,
+            web3=web3
+        )
 
     # Clear any existing rewards
     send_queued_rewards(
@@ -48,7 +49,7 @@ def run_rewarder(config: Config):
             logger.info('Starting rewarder round')
             new_start_block = process_new_deposits(
                 web3=web3,
-                bridge_contract=bridge_contract,
+                bridge_contracts=bridge_contracts,
                 DBSession=DBSession,
                 config=config,
                 start_block=start_block,
@@ -74,7 +75,7 @@ def run_rewarder(config: Config):
 def process_new_deposits(
     *,
     web3: Web3,
-    bridge_contract: Contract,
+    bridge_contracts: Dict[str, Contract],
     DBSession: sessionmaker,
     config: Config,
     start_block: int,
@@ -87,14 +88,19 @@ def process_new_deposits(
         logger.info('to_block %s is smaller than start_block %s, not doing anything', to_block, start_block)
         return None
 
-    deposits = get_deposits(
-        bridge_contract=bridge_contract,
-        web3=web3,
-        from_block=start_block,
-        to_block=to_block,
-        fee_percentage=config.deposit_fee_percentage,
-    )
-    logger.info("Found %s deposits", len(deposits))
+    deposits = []
+    for bridge_key, bridge_contract in bridge_contracts.items():
+        logger.info("Getting deposits for %s", bridge_key)
+        bridge_deposits = get_deposits(
+            bridge_contract=bridge_contract,
+            web3=web3,
+            from_block=start_block,
+            to_block=to_block,
+            fee_percentage=config.deposit_fee_percentage,
+        )
+        logger.info("Found %s deposits for %s", len(bridge_deposits), bridge_key)
+        deposits.extend(bridge_deposits)
+
     with DBSession.begin() as dbsession:
         for deposit in deposits:
             queue_reward(

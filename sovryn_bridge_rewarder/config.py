@@ -8,34 +8,36 @@ from eth_account import Account
 from eth_account.signers.base import BaseAccount
 from eth_utils import is_hex_address
 
-RewardThresholdTable = NewType('RewardThresholdTable', Dict[str, Decimal])
+BridgeAddressMap = NewType('RewardThresholdMap', Dict[str, str])
+RewardThresholdMap = NewType('RewardThresholdMap', Dict[str, Decimal])
 
 
 @dataclass()
 class Config:
-    bridge_address: str
+    bridge_addresses: BridgeAddressMap
     rpc_url: str
     db_url: str
     default_start_block: int
     required_block_confirmations: int
     deposit_fee_percentage: Decimal
     reward_rbtc: Decimal
-    reward_thresholds: RewardThresholdTable
+    reward_thresholds: RewardThresholdMap
     account: BaseAccount = field(repr=False)
     sleep_seconds: int = 30
     explorer_url: str = 'https://explorer.rsk.co'
 
     def validate(self):
         for field in fields(self):
-            type_ = dict if field.name == 'reward_thresholds' else field.type
+            type_ = dict if field.name in ('bridge_addresses', 'reward_thresholds') else field.type
             value = getattr(self, field.name, None)
             if value is None:
                 raise ValueError(f'missing value for {field.name}')
             if not isinstance(value, type_):
                 raise ValueError(f'expected {field.name} to be of type {type_}, was {type(value)}')
 
-        if not is_hex_address(self.bridge_address):
-            raise ValueError(f'bridge_address {self.bridge_address!r} is not a valid hex address')
+        for bridge_key, bridge_address in self.bridge_addresses.items():
+            if not is_hex_address(bridge_address):
+                raise ValueError(f'address {bridge_address!r} for bridge {bridge_key!r} is not a valid hex address')
 
         if self.reward_rbtc > Decimal('0.1'):
             raise ValueError(
@@ -63,12 +65,12 @@ def load_from_json(json_dict) -> Config:
     account = load_account_from_json(json_dict)
     try:
         raw_reward_thresholds = json_dict['rewardThresholds'].items()
-        reward_thresholds = RewardThresholdTable({
+        reward_thresholds = RewardThresholdMap({
             k: Decimal(v)
             for (k, v) in raw_reward_thresholds
         })
         config = Config(
-            bridge_address=json_dict['bridgeAddress'],
+            bridge_addresses=json_dict['bridgeAddresses'],
             rpc_url=json_dict['rpcUrl'],
             db_url=json_dict['dbUrl'],
             default_start_block=json_dict['defaultStartBlock'],

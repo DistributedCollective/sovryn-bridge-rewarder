@@ -44,24 +44,31 @@ def run_rewarder(config: Config):
     with DBSession.begin() as dbsession:
         start_block = get_start_block(dbsession, config.default_start_block)
     while True:
-        logger.info('Starting rewarder round')
-        new_start_block = process_new_deposits(
-            web3=web3,
-            bridge_contract=bridge_contract,
-            DBSession=DBSession,
-            config=config,
-            start_block=start_block,
-        )
-        if new_start_block:
-            start_block = new_start_block
+        try:
+            logger.info('Starting rewarder round')
+            new_start_block = process_new_deposits(
+                web3=web3,
+                bridge_contract=bridge_contract,
+                DBSession=DBSession,
+                config=config,
+                start_block=start_block,
+            )
+            if new_start_block:
+                start_block = new_start_block
 
-        send_queued_rewards(
-            web3=web3,
-            DBSession=DBSession,
-            from_account=config.account,
-        )
-        logger.info('Round complete, sleeping %s s', config.sleep_seconds)
-        sleep(config.sleep_seconds)
+            send_queued_rewards(
+                web3=web3,
+                DBSession=DBSession,
+                from_account=config.account,
+            )
+            logger.info('Round complete, sleeping %s s', config.sleep_seconds)
+            sleep(config.sleep_seconds)
+        except KeyboardInterrupt:
+            logger.info('Quitting.')
+            break
+        except Exception:
+            logger.exception('Error running rewarder, sleeping a bit and trying again.')
+            sleep(60)
 
 
 def process_new_deposits(

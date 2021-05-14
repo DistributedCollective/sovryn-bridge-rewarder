@@ -1,0 +1,32 @@
+module.exports = {
+  apps : [
+    {
+      name: 'rewarder-testnet',
+      cmd: './venv/bin/sovryn_bridge_rewarder',
+      args: 'config_testnet.json --rewarder --no-ui',
+      pid: './var/pid/testnet.pid',
+      error_file: './var/log/testnet/error.log',
+      out_file: './var/log/testnet/out.log',
+      log_file: './var/log/testnet/combined.log',
+      interpreter: './venv/bin/python3',
+      cwd: __dirname,
+      watch: false,
+      autorestart: false,
+      instances: 1,
+    },
+    {
+      name: 'rewarder-ui-testnet',
+      cmd: './venv/bin/sovryn_bridge_rewarder',
+      args: 'config_testnet.json --no-rewarder --ui',
+      pid: './var/pid/testnet_ui.pid',
+      error_file: './var/log/testnet/ui_error.log',
+      out_file: './var/log/testnet/ui_out.log',
+      log_file: './var/log/testnet/ui_combined.log',
+      interpreter: './venv/bin/python3',
+      cwd: __dirname,
+      watch: false,
+      autorestart: true,
+      instances: 1,
+    },
+  ],
+};

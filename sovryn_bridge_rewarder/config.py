@@ -62,7 +62,7 @@ class Config:
 
 
 def load_from_json(json_dict) -> Config:
-    account = load_account_from_json(json_dict)
+    account = load_account_from_json(json_dict, password=os.getenv('KEYSTORE_PASSWORD'))
     try:
         raw_reward_thresholds = json_dict['rewardThresholds'].items()
         reward_thresholds = RewardThresholdMap({
@@ -88,7 +88,7 @@ def load_from_json(json_dict) -> Config:
     return config
 
 
-def load_account_from_json(json_dict) -> BaseAccount:
+def load_account_from_json(json_dict, *, password=None) -> BaseAccount:
     if 'keyStoreFile' in json_dict:
         path = json_dict['keyStoreFile']
         secrets_type = 'keyStore'
@@ -106,6 +106,7 @@ def load_account_from_json(json_dict) -> BaseAccount:
         private_key = raw_data
     else:
         # TODO: this now prompts here, making config potentially interactive...
-        password = getpass(f'Enter keystore password for {path}: ')
+        if not password:
+            password = getpass(f'Enter keystore password for {path}: ')
         private_key = Account.decrypt(raw_data, password)
     return Account.from_key(private_key)

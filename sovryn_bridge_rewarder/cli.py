@@ -1,3 +1,4 @@
+import sys
 from multiprocessing import Process
 import json
 import logging
@@ -24,7 +25,7 @@ def main(context, config_file: str, rewarder: bool, ui: bool):
         config_json = json.load(f)
         config = load_from_json(config_json)
 
-    logging.basicConfig(level=logging.INFO)
+    _setup_logging()
 
     ui_process = None
     if ui:
@@ -37,6 +38,23 @@ def main(context, config_file: str, rewarder: bool, ui: bool):
     finally:
         if ui_process:
             _close_process(ui_process)
+
+
+def _setup_logging():
+    root = logging.getLogger()
+    root.setLevel(logging.NOTSET)
+    formatter = logging.Formatter('%(asctime)s - %(name)s [%(levelname)s] %(message)s')
+
+    error_handler = logging.StreamHandler(sys.stderr)
+    error_handler.setLevel(logging.WARNING)
+    error_handler.setFormatter(formatter)
+    root.addHandler(error_handler)
+
+    info_handler = logging.StreamHandler(sys.stdout)
+    info_handler.setLevel(logging.INFO)
+    info_handler.setFormatter(formatter)
+    root.addHandler(info_handler)
+
 
 
 def _start_ui(config):

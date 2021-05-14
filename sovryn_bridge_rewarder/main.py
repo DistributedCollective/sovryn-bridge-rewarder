@@ -110,6 +110,7 @@ def process_new_deposits(
             queue_reward(
                 deposit=deposit,
                 dbsession=dbsession,
+                web3=web3,
                 reward_amount_rbtc=config.reward_rbtc,
                 deposit_thresholds=config.reward_thresholds,
             )

@@ -4,9 +4,10 @@ Handles both DB and Web3 related logic.
 """
 from decimal import Decimal
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from eth_account.signers.base import BaseAccount
+from eth_utils import from_wei
 from hexbytes import HexBytes
 from sqlalchemy import func
 from sqlalchemy.orm.session import Session, sessionmaker
@@ -25,6 +26,7 @@ def queue_reward(
     *,
     deposit: Deposit,
     dbsession: Session,
+    web3: Web3,
     reward_amount_rbtc: Decimal,
     deposit_thresholds: RewardThresholdMap,
 ):
@@ -44,6 +46,25 @@ def queue_reward(
         logger.info('User %s has already been rewarded.', deposit.user_address)
         return
 
+    [balance, transaction_count] = _get_user_balance_and_transaction_count(
+        web3=web3,
+        user_address=deposit.user_address.lower(),
+    )
+    if balance > 0:
+        logger.info(
+            'User %s has an existing balance of %s RBTC - not rewarding',
+            deposit.user_address,
+            from_wei(balance, 'ether')
+        )
+        return
+    if transaction_count > 0:
+        logger.info(
+            'User %s already has %s transactions in RSK - not rewarding',
+            deposit.user_address,
+            transaction_count
+        )
+        return
+
     logger.info('Rewarding user %s with %s RBTC', deposit.user_address, str(reward_amount_rbtc))
 
     reward = Reward(
@@ -61,6 +82,15 @@ def queue_reward(
     dbsession.add(reward)
     dbsession.flush()
     return reward
+
+
+def _get_user_balance_and_transaction_count(web3: Web3, user_address: str) -> Tuple[int, int]:
+    @retryable(max_attempts=5)
+    def get_data():
+        balance = web3.eth.get_balance(address(user_address))
+        transaction_count = web3.eth.get_transaction_count(address(user_address))
+        return [balance, transaction_count]
+    return get_data()
 
 
 def get_queued_reward_ids(dbsession: Session):

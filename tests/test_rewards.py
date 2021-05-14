@@ -1,6 +1,11 @@
+from collections import defaultdict
 from decimal import Decimal
+from typing import cast
 
+import pytest
+from hexbytes import HexBytes
 from sqlalchemy.orm import Session
+from web3 import Web3
 
 from sovryn_bridge_rewarder.models import Reward, RewardStatus
 from sovryn_bridge_rewarder.deposits import Deposit
@@ -46,22 +51,61 @@ ANOTHER_DEPOSIT_SAME_USER = Deposit(
 )
 
 
-def test_queue_reward_threshold_not_met(dbsession: Session):
+def _normalize_address(a):
+    if isinstance(a, HexBytes):
+        a = a.hex()
+    return a.lower()
+
+
+class MockEth:
+    def __init__(self):
+        self._balances = defaultdict(int)
+        self._transaction_counts = defaultdict(int)
+
+    def get_balance(self, address) -> int:
+        return self._balances[_normalize_address(address)]
+
+    def get_transaction_count(self, address) -> int:
+        return self._transaction_counts[_normalize_address(address)]
+
+    def set_balance(self, address, value: int):
+        self._balances[_normalize_address(address)] = value
+
+    def set_transaction_count(self, address, value: int):
+        self._transaction_counts[_normalize_address(address)] = value
+
+
+class MockWeb3:
+    eth: MockEth
+
+    def __init__(self):
+        self.eth = MockEth()
+
+
+@pytest.fixture
+def mock_web3() -> MockWeb3:
+    # By default, the users have no balances and no transactions
+    return MockWeb3()
+
+
+def test_queue_reward_threshold_not_met(dbsession: Session, mock_web3):
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=Decimal('0.01'),
         deposit_thresholds=RewardThresholdMap({
             'DAIbs': Decimal('30.01'),
-        })
+        }),
     )
     assert dbsession.query(Reward).count() == 0
 
 
-def test_queue_reward_token_not_found(dbsession: Session):
+def test_queue_reward_token_not_found(dbsession: Session, mock_web3):
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=Decimal('0.01'),
         deposit_thresholds=RewardThresholdMap({
             'FOO': Decimal('30.00'),
@@ -70,10 +114,11 @@ def test_queue_reward_token_not_found(dbsession: Session):
     assert dbsession.query(Reward).count() == 0
 
 
-def test_queue_reward_threshold_is_met(dbsession: Session):
+def test_queue_reward_threshold_is_met(dbsession: Session, mock_web3):
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=Decimal('0.01'),
         deposit_thresholds=RewardThresholdMap({
             'DAIbs': Decimal('30.00'),
@@ -97,11 +142,12 @@ def test_queue_reward_threshold_is_met(dbsession: Session):
         assert getattr(reward, f'deposit_{key}') == getattr(EXAMPLE_DEPOSIT, key)
 
 
-def test_reward_not_queued_twice(dbsession: Session):
+def test_reward_not_queued_twice(dbsession: Session, mock_web3):
     def queue():
         return queue_reward(
             deposit=EXAMPLE_DEPOSIT,
             dbsession=dbsession,
+            web3=mock_web3,
             reward_amount_rbtc=Decimal('0.01'),
             deposit_thresholds=RewardThresholdMap({
                 'DAIbs': Decimal('30.00'),
@@ -123,7 +169,7 @@ def test_reward_not_queued_twice(dbsession: Session):
     assert dbsession.query(Reward).count() == 1
 
 
-def test_queue_multiple_rewards(dbsession):
+def test_queue_multiple_rewards(dbsession, mock_web3):
     reward_amount_rbtc = Decimal('0.01')
     deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
@@ -131,6 +177,7 @@ def test_queue_multiple_rewards(dbsession):
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
@@ -138,6 +185,7 @@ def test_queue_multiple_rewards(dbsession):
     another_reward = queue_reward(
         deposit=ANOTHER_DEPOSIT_DIFFERENT_USER,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
@@ -146,7 +194,7 @@ def test_queue_multiple_rewards(dbsession):
     assert another_reward.deposit_transaction_hash == ANOTHER_DEPOSIT_DIFFERENT_USER.transaction_hash
 
 
-def test_reward_not_queued_again_for_same_user(dbsession):
+def test_reward_not_queued_again_for_same_user(dbsession, mock_web3):
     reward_amount_rbtc = Decimal('0.01')
     deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
@@ -154,6 +202,7 @@ def test_reward_not_queued_again_for_same_user(dbsession):
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
@@ -161,6 +210,7 @@ def test_reward_not_queued_again_for_same_user(dbsession):
     another_reward = queue_reward(
         deposit=ANOTHER_DEPOSIT_SAME_USER,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
@@ -168,7 +218,7 @@ def test_reward_not_queued_again_for_same_user(dbsession):
     assert not another_reward
 
 
-def test_get_queued_reward_ids(dbsession):
+def test_get_queued_reward_ids(dbsession, mock_web3):
     reward_amount_rbtc = Decimal('0.01')
     deposit_thresholds = RewardThresholdMap({
         'DAIbs': Decimal('2.00'),
@@ -176,12 +226,14 @@ def test_get_queued_reward_ids(dbsession):
     reward_1 = queue_reward(
         deposit=EXAMPLE_DEPOSIT,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
     reward_2 = queue_reward(
         deposit=ANOTHER_DEPOSIT_DIFFERENT_USER,
         dbsession=dbsession,
+        web3=mock_web3,
         reward_amount_rbtc=reward_amount_rbtc,
         deposit_thresholds=deposit_thresholds,
     )
@@ -193,3 +245,33 @@ def test_get_queued_reward_ids(dbsession):
     dbsession.flush()
 
     assert get_queued_reward_ids(dbsession) == [reward_2.id]
+
+
+def test_queue_reward_user_has_existing_balance(dbsession: Session, mock_web3: MockWeb3):
+    """Users with existing RBTC balances should not be rewarded"""
+    mock_web3.eth.set_balance(EXAMPLE_DEPOSIT.user_address, 1)
+    queue_reward(
+        deposit=EXAMPLE_DEPOSIT,
+        dbsession=dbsession,
+        web3=cast(Web3, mock_web3),
+        reward_amount_rbtc=Decimal('0.01'),
+        deposit_thresholds=RewardThresholdMap({
+            'DAIbs': Decimal('30.00'),
+        })
+    )
+    assert dbsession.query(Reward).count() == 0
+
+
+def test_queue_reward_user_has_existing_transactions(dbsession: Session, mock_web3: MockWeb3):
+    """Users who have already done transactions in RSK should not be rewarder"""
+    mock_web3.eth.set_transaction_count(EXAMPLE_DEPOSIT.user_address, 1)
+    queue_reward(
+        deposit=EXAMPLE_DEPOSIT,
+        dbsession=dbsession,
+        web3=cast(Web3, mock_web3),
+        reward_amount_rbtc=Decimal('0.01'),
+        deposit_thresholds=RewardThresholdMap({
+            'DAIbs': Decimal('30.00'),
+        })
+    )
+    assert dbsession.query(Reward).count() == 0

@@ -31,6 +31,9 @@ def main(context, config_file: str, rewarder: bool, ui: bool):
             config.sentry_dsn,
             traces_sample_rate=0.1
         )
+        click.echo("Sentry initialized")
+    else:
+        click.echo("Sentry DSN not provided -- Sentry not initialized")
 
     _setup_logging()
 

@@ -42,6 +42,7 @@ class Reward(Base):
     deposit_log_index = Column(Integer, nullable=False)
     deposit_block_hash = Column(Text, nullable=False)
     deposit_transaction_hash = Column(Text, nullable=False, index=True)
+    deposit_contract_address = Column(Text, nullable=False)
 
     # Maybe not needed
     #deposit_token_address = Column(Text, nullable=False)

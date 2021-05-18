@@ -78,6 +78,7 @@ def queue_reward(
         deposit_log_index=deposit.log_index,
         deposit_block_hash=deposit.block_hash,
         deposit_transaction_hash=deposit.transaction_hash,
+        deposit_contract_address=deposit.contract_address,
     )
     dbsession.add(reward)
     dbsession.flush()

@@ -131,6 +131,7 @@ def test_queue_reward_threshold_is_met(dbsession: Session, mock_web3):
     reward = dbsession.query(Reward).first()
     assert reward.user_address == EXAMPLE_DEPOSIT.user_address
     assert reward.reward_rbtc_wei == 10_000_000_000_000_000
+    assert reward.deposit_contract_address == EXAMPLE_DEPOSIT.contract_address
     assert reward.reward_transaction_hash is None
     assert reward.sent_at is None
     for key in [

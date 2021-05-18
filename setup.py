@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'web3',
         'hexbytes',
+        'eth_abi',
         'eth_account',
         'eth_typing',
         'eth_utils',

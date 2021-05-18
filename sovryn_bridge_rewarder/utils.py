@@ -6,8 +6,10 @@ import os
 from time import sleep
 from typing import Dict, Any, Union
 
+from eth_abi import decode_single
+from eth_abi.exceptions import DecodingError
 from eth_typing import AnyAddress
-from eth_utils import to_checksum_address
+from eth_utils import to_checksum_address, to_hex
 from web3 import Web3
 from web3.contract import Contract, ContractEvent
 
@@ -29,6 +31,10 @@ def address(a: Union[bytes, str]) -> AnyAddress:
     # so RSK-checksummed addresses are broken
     # Should instead fix web3, but meanwhile this wrapper will help us
     return to_checksum_address(a)
+
+
+# Alias, better name...
+to_address = address
 
 
 @functools.lru_cache()
@@ -97,3 +103,21 @@ def retryable(*, max_attempts: int = 10):
                     attempt += 1
         return wrapped
     return decorator
+
+
+class UserDataNotAddress(Exception):
+    def __init__(self, userdata: bytes):
+        super().__init__(f'userdata {userdata!r} cannot be decoded to an address')
+
+
+def decode_address_from_userdata(userdata: bytes) -> str:
+    try:
+        return decode_single('address', userdata)
+    except DecodingError as e:
+        raise UserDataNotAddress(userdata) from e
+
+
+@functools.lru_cache()
+def is_contract(*, web3: Web3, address: str) -> bool:
+    code = web3.eth.get_code(to_address(address))
+    return code != b'\x00'

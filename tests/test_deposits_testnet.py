@@ -16,12 +16,15 @@ from sovryn_bridge_rewarder.deposits import (
     parse_deposits_from_events,
 )
 from sovryn_bridge_rewarder.utils import (
+    UserDataNotAddress,
     get_events,
+    decode_address_from_userdata,
+    is_contract,
 )
-
 
 CONFIG = {
     "bridge_address": "0x8e7199d5f496ea862492f4f983a1627d723328fd",
+    "actual_testnet_eth_bridge_address": "0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156",
     "rpc_url": "https://testnet.sovryn.app/rpc",
     "start_block": 1784453,
 }
@@ -36,6 +39,14 @@ def web3() -> Web3:
 def bridge_contract(web3) -> Contract:
     return get_bridge_contract(
         bridge_address=CONFIG['bridge_address'],
+        web3=web3,
+    )
+
+
+@pytest.fixture()
+def eth_bridge_contract(web3) -> Contract:
+    return get_bridge_contract(
+        bridge_address=CONFIG['actual_testnet_eth_bridge_address'],
         web3=web3,
     )
 
@@ -75,6 +86,32 @@ def test_get_events_no_duplicate_events(bridge_contract: Contract):
     )
     assert len(events) == 1
     assert events == [EXAMPLE_CROSS_TRANSFER_EVENTS[-1]]
+
+
+def test_get_cross_transfer_event_with_userdata(web3, eth_bridge_contract):
+    # Failed reward in DB:
+    # id                            | 2
+    # status                        | error_confirming
+    # reward_rbtc_wei               | 100000000000000
+    # user_address                  | 0xc855fd4af3526215d37b39cc33fa3c352d42e6f8
+    # deposit_side_token_address    | 0x4f2fc8d55c1888a5aca2503e2f3e5d74eef37c33
+    # deposit_side_token_symbol     | esETH
+    # deposit_main_token_address    | 0xa1f7efd2b12aba416f1c57b9a54ac92b15c3a792
+    # deposit_amount_minus_fees_wei | 199000000000000000
+    # deposit_log_index             | 6
+    # deposit_block_hash            | 0xa4a5bcd4086485ae94c1639bd5b72d2a33764d4e3f09a3053f8194e6f478b58c
+    # deposit_transaction_hash      | 0x4885316d0b42374b8debcbdc88dd552c8dba0420fb23cccb952854770df9af0e
+    # reward_transaction_hash       | 0x4f7283fb570badd49cf5c62bdda3d32eb69de44f93f9540d0bbfea9490f0f8e2
+    # reward_transaction_nonce      | 4
+    # created_at                    | 2021-05-17 19:19:13.124205+00
+    # sent_at                       | 2021-05-17 19:19:13.314632+00
+    block = web3.eth.get_block('0xa4a5bcd4086485ae94c1639bd5b72d2a33764d4e3f09a3053f8194e6f478b58c')
+    events = get_events(
+        event=eth_bridge_contract.events.AcceptedCrossTransfer,
+        from_block=block.number,
+        to_block=block.number,
+    )
+    assert events == [EXAMPLE_CROSS_TRANSFER_EVENT_WITH_USERDATA]
 
 
 def test_parse_deposits_from_events(web3, bridge_contract):
@@ -125,6 +162,47 @@ def test_parse_deposits_from_events(web3, bridge_contract):
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         })
     ]
+
+
+def test_decode_address_from_userdata():
+    user_data = (b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+                 b'_\xc4\xd8\xb1\xf9j\x91f\x83\x95Brr\x1c\xfe\x96\xedZ9S')
+    assert decode_address_from_userdata(user_data) == '0x5fc4d8b1f96a916683954272721cfe96ed5a3953'
+
+
+def test_decode_address_from_invalid_userdata():
+    user_data = b'_\xc4\xd8\xb1\xf9j\x91f\x83\x95Brr\x1c\xfe\x96\xedZ9'
+    with pytest.raises(UserDataNotAddress):
+        decode_address_from_userdata(user_data)
+
+
+def test_is_contract_eoa(web3):
+    assert is_contract(web3=web3, address='0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae') is False
+
+
+def test_is_contract_contract(web3):
+    assert is_contract(web3=web3, address='0xc855fd4af3526215d37b39cc33fa3c352d42e6f8') is True
+
+
+def test_parse_deposits_from_event_with_userdata(web3, eth_bridge_contract):
+    deposits = parse_deposits_from_events(
+        web3=web3,
+        bridge_contract=eth_bridge_contract,
+        events=[EXAMPLE_CROSS_TRANSFER_EVENT_WITH_USERDATA],
+        fee_percentage=Decimal('0.002'),
+    )
+    assert len(deposits) == 1
+    deposit = deposits[0]
+    # Important part -- we want to decode the user_address to the actual receiver from user data
+    assert deposit.user_address == '0x5fc4d8b1f96a916683954272721cfe96ed5a3953'
+    # Verify these too, just to be sure
+    assert deposit.side_token_symbol == 'esETH'
+    assert deposit.transaction_hash == '0x4885316d0b42374b8debcbdc88dd552c8dba0420fb23cccb952854770df9af0e'
+    assert deposit.block_hash == '0xa4a5bcd4086485ae94c1639bd5b72d2a33764d4e3f09a3053f8194e6f478b58c'
+    assert deposit.log_index == 6
+    assert deposit.amount_minus_fees_wei == 199000000000000000
+    assert deposit.contract_address == '0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156'
+    assert deposit.main_token_address == '0xa1f7efd2b12aba416f1c57b9a54ac92b15c3a792'  # WETH
 
 
 EXAMPLE_CROSS_TRANSFER_EVENTS = [
@@ -183,3 +261,23 @@ EXAMPLE_CROSS_TRANSFER_EVENTS = [
         'transactionIndex': 2
     }),
 ]
+EXAMPLE_CROSS_TRANSFER_EVENT_WITH_USERDATA = AttributeDict({
+    'address': '0xC0E7A7FfF4aBa5e7286D5d67dD016B719DCc9156',
+    'args': {'_amount': 199000000000000000,
+             '_calculatedDecimals': 18,
+             '_calculatedGranularity': 1,
+             '_decimals': 18,
+             '_formattedAmount': 199000000000000000,
+             '_granularity': 1,
+             '_to': '0xC855FD4aF3526215d37b39Cc33fa3C352d42e6F8',
+             '_tokenAddress': '0xa1F7EfD2B12aBa416f1c57b9a54AC92B15C3A792',
+             '_userData': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+                          b'_\xc4\xd8\xb1\xf9j\x91f\x83\x95Brr\x1c\xfe\x96\xedZ9S'},
+    'blockHash': HexBytes('0xa4a5bcd4086485ae94c1639bd5b72d2a33764d4e3f09a3053f8194e6f478b58c'),
+    'blockNumber': 1851584,
+    'event': 'AcceptedCrossTransfer',
+    'logIndex': 6,
+    'transactionHash': HexBytes('0x4885316d0b42374b8debcbdc88dd552c8dba0420fb23cccb952854770df9af0e'),
+    'transactionIndex': 1
+})
+

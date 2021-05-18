@@ -11,8 +11,14 @@ from web3 import Web3
 from eth_utils import to_int
 from web3.contract import Contract
 
-from .utils import get_erc20_contract, get_events, address
-
+from .utils import (
+    get_erc20_contract,
+    get_events,
+    address,
+    is_contract,
+    decode_address_from_userdata,
+    UserDataNotAddress,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +149,30 @@ def parse_deposits_from_events(
             continue
 
         amount_minus_fees_wei = args['_formattedAmount']  # this has 18 decimals always
-        user_address = args['_to'].lower()
+
+        # To support the aggregator, replicate the logic from Bridge.sol _acceptCrossToSideToken
+        # If receiver is a contract, it calls onTokensMinted(amount,sideTokenAddress,userData) on the receiver.
+        # The receiver then assumes (at least in the case of the ETH aggregator) that the userData represents
+        # the actual address of the user.
+        receiver_address = args['_to']
+        user_data = args['_userData']
+        if is_contract(
+            web3=web3,
+            address=receiver_address,
+        ):
+            try:
+                user_address = decode_address_from_userdata(user_data)
+            except UserDataNotAddress:
+                logger.warning(
+                    'User data %r is not an address -- skipping deposit for %s with tx hash %s, index %s',
+                    user_data,
+                    side_token.symbol,
+                    event.transactionHash,
+                    event.logIndex,
+                )
+                continue
+        else:
+            user_address = receiver_address.lower()
 
         amount_minus_fees_decimal = Decimal(amount_minus_fees_wei) / (Decimal(10) ** side_token.decimals)
         amount_decimal = amount_minus_fees_decimal / (Decimal(1) - fee_percentage)

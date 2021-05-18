@@ -56,7 +56,7 @@ def get_events(
     logger.info('fetching events from %s to %s with batch size %s', from_block, to_block, batch_size)
     ret = []
     batch_from_block = from_block
-    while batch_from_block < to_block:
+    while batch_from_block <= to_block:
         batch_to_block = min(batch_from_block + batch_size, to_block)
         logger.info('fetching batch from %s to %s (up to %s)', batch_from_block, batch_to_block, to_block)
         event_filter = event.createFilter(

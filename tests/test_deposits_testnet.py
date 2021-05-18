@@ -49,6 +49,34 @@ def test_get_cross_transfer_events(bridge_contract: Contract):
     assert events == EXAMPLE_CROSS_TRANSFER_EVENTS
 
 
+def test_get_events_includes_events_from_to_block(bridge_contract: Contract):
+    # There was a bug with this not always including the final block
+    end_block = 1785741
+    assert end_block == EXAMPLE_CROSS_TRANSFER_EVENTS[-1].blockNumber
+    events = get_events(
+        event=bridge_contract.events.AcceptedCrossTransfer,
+        from_block=end_block,
+        to_block=end_block,
+    )
+    assert len(events) == 1
+    assert events == [EXAMPLE_CROSS_TRANSFER_EVENTS[-1]]
+
+
+def test_get_events_no_duplicate_events(bridge_contract: Contract):
+    # No bugs with this but test it anyway
+    end_block = 1785741
+    assert end_block == EXAMPLE_CROSS_TRANSFER_EVENTS[-1].blockNumber
+
+    events = get_events(
+        event=bridge_contract.events.AcceptedCrossTransfer,
+        from_block=end_block - 4,
+        to_block=end_block + 4,
+        batch_size=0,  # 1 block at a time
+    )
+    assert len(events) == 1
+    assert events == [EXAMPLE_CROSS_TRANSFER_EVENTS[-1]]
+
+
 def test_parse_deposits_from_events(web3, bridge_contract):
     deposits = parse_deposits_from_events(
         web3=web3,

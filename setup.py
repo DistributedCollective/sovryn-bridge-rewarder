@@ -18,6 +18,7 @@ setup(
         'sqlalchemy',
         'click',
         'justpy',
+        'sentry-sdk',
     ],
     extras_require={
         'dev': [

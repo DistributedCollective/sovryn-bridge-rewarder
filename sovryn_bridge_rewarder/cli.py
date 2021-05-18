@@ -25,6 +25,13 @@ def main(context, config_file: str, rewarder: bool, ui: bool):
         config_json = json.load(f)
         config = load_from_json(config_json)
 
+    if config.sentry_dsn:
+        import sentry_sdk
+        sentry_sdk.init(
+            config.sentry_dsn,
+            traces_sample_rate=0.1
+        )
+
     _setup_logging()
 
     ui_process = None

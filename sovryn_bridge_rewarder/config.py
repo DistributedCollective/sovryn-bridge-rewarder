@@ -2,7 +2,7 @@ import os
 from getpass import getpass
 from dataclasses import dataclass, field, fields
 from decimal import Decimal
-from typing import Dict, NewType
+from typing import Dict, NewType, Optional
 
 from eth_account import Account
 from eth_account.signers.base import BaseAccount
@@ -25,6 +25,7 @@ class Config:
     account: BaseAccount = field(repr=False)
     sleep_seconds: int = 30
     explorer_url: str = 'https://explorer.rsk.co'
+    sentry_dsn: str = ''
 
     def validate(self):
         for field in fields(self):
@@ -81,6 +82,7 @@ def load_from_json(json_dict) -> Config:
             sleep_seconds=json_dict.get('sleepSeconds', Config.sleep_seconds),
             explorer_url=json_dict.get('explorerUrl', Config.explorer_url),
             account=account,
+            sentry_dsn=json_dict.get('sentryDsn', Config.sentry_dsn),
         )
     except KeyError as e:
         raise ValueError(f'missing required configuration option: {e.args[0]}')

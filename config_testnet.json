@@ -1,7 +1,7 @@
 {
   "bridgeAddresses": {
-    "RSK-BSC": "0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156",
-    "RSK-ETH": "0x39500b3864ddda31633319c8a570176a79977a42"
+    "RSK-ETH": "0xc0e7a7fff4aba5e7286d5d67dd016b719dcc9156",
+    "RSK-BSC": "0x39500b3864ddda31633319c8a570176a79977a42"
   },
   "rpcUrl": "https://testnet.sovryn.app/rpc",
   "dbUrl": "postgresql:///bridge_testnet",

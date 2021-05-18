@@ -31,6 +31,7 @@ class Deposit:
     block_hash: str
     transaction_hash: str
     log_index: int
+    contract_address: str
     event: Any = None  # For debugging
 
 
@@ -155,6 +156,7 @@ def parse_deposits_from_events(
             amount_decimal=amount_decimal,
             block_hash=event.blockHash.hex().lower(),
             transaction_hash=event.transactionHash.hex().lower(),
+            contract_address=event.address.lower(),
             log_index=event.logIndex,
             #event=event,
         )

@@ -25,7 +25,8 @@ EXAMPLE_DEPOSIT = Deposit(
     side_token_address='0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
     side_token_symbol='DAIbs',
     transaction_hash='0x05f16236ee5ca06311f4a014b9fcaa40a32389c6c95b86267ab0bfcbc5616972',
-    user_address='0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
+    user_address='0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae',
+    contract_address='0x8e7199d5f496ea862492f4f983a1627d723328fd',
 )
 ANOTHER_DEPOSIT_DIFFERENT_USER = Deposit(
     amount_decimal=Decimal('2.5'),
@@ -36,7 +37,8 @@ ANOTHER_DEPOSIT_DIFFERENT_USER = Deposit(
     side_token_address='0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
     side_token_symbol='DAIbs',
     transaction_hash='0x0462cb7f734cd277d087a80205b4098ed4e447ec3c7847b68652dd2994a44980',
-    user_address='0xf00AF1989184Ae43577Fd33E006baD4bF760F98F'
+    user_address='0xf00AF1989184Ae43577Fd33E006baD4bF760F98F',
+    contract_address='0x8e7199d5f496ea862492f4f983a1627d723328fd',
 )
 ANOTHER_DEPOSIT_SAME_USER = Deposit(
     amount_decimal=Decimal('2.5'),
@@ -47,7 +49,8 @@ ANOTHER_DEPOSIT_SAME_USER = Deposit(
     side_token_address='0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
     side_token_symbol='DAIbs',
     transaction_hash='0x0462cb7f734cd277d087a80205b4098ed4e447ec3c7847b68652dd2994a44980',
-    user_address='0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
+    user_address='0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae',
+    contract_address='0x8e7199d5f496ea862492f4f983a1627d723328fd',
 )
 
 
@@ -263,7 +266,7 @@ def test_queue_reward_user_has_existing_balance(dbsession: Session, mock_web3: M
 
 
 def test_queue_reward_user_has_existing_transactions(dbsession: Session, mock_web3: MockWeb3):
-    """Users who have already done transactions in RSK should not be rewarder"""
+    """Users who have already done transactions in RSK should not be rewarded"""
     mock_web3.eth.set_transaction_count(EXAMPLE_DEPOSIT.user_address, 1)
     queue_reward(
         deposit=EXAMPLE_DEPOSIT,

@@ -95,6 +95,7 @@ def test_parse_deposits_from_events(web3, bridge_contract):
             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
             'side_token_symbol': 'DAIbs',
             'transaction_hash': '0x0462cb7f734cd277d087a80205b4098ed4e447ec3c7847b68652dd2994a44980',
+            'contract_address': '0x8e7199d5f496ea862492f4f983a1627d723328fd',
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         }),
         Deposit(**{
@@ -107,6 +108,7 @@ def test_parse_deposits_from_events(web3, bridge_contract):
             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
             'side_token_symbol': 'DAIbs',
             'transaction_hash': '0x79e1e0211c0832e55e29dc6b31e0be8e2aded15ee2783a8c7d5f1032ad7eddbd',
+            'contract_address': '0x8e7199d5f496ea862492f4f983a1627d723328fd',
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         }),
         Deposit(**{
@@ -119,6 +121,7 @@ def test_parse_deposits_from_events(web3, bridge_contract):
             'side_token_address': '0x081d4aa03ac5cdaf2b758306a259e1bd0896c0ca',
             'side_token_symbol': 'DAIbs',
             'transaction_hash': '0x05f16236ee5ca06311f4a014b9fcaa40a32389c6c95b86267ab0bfcbc5616972',
+            'contract_address': '0x8e7199d5f496ea862492f4f983a1627d723328fd',
             'user_address': '0xca478e11953fe327b46dd71dd9fd31c92dc9a9ae'
         })
     ]

@@ -19,10 +19,10 @@ class Config:
     db_url: str
     default_start_block: int
     required_block_confirmations: int
-    deposit_fee_percentage: Decimal
     reward_rbtc: Decimal
     reward_thresholds: RewardThresholdMap
     account: BaseAccount = field(repr=False)
+    deposit_fee_percentage: Decimal = Decimal(0)
     sleep_seconds: int = 30
     explorer_url: str = 'https://explorer.rsk.co'
     sentry_dsn: str = ''
@@ -76,7 +76,7 @@ def load_from_json(json_dict) -> Config:
             db_url=json_dict['dbUrl'],
             default_start_block=json_dict['defaultStartBlock'],
             required_block_confirmations=json_dict['requiredBlockConfirmations'],
-            deposit_fee_percentage=Decimal(json_dict['depositFeePercentage']),
+            deposit_fee_percentage=Decimal(json_dict.get('depositFeePercentage', Config.deposit_fee_percentage)),
             reward_rbtc=Decimal(json_dict['rewardRbtc']),
             reward_thresholds=reward_thresholds,
             sleep_seconds=json_dict.get('sleepSeconds', Config.sleep_seconds),

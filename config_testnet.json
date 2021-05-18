@@ -9,18 +9,18 @@
   "xdefaultStartBlock": 1745634,
   "defaultStartBlock": 1837023,
   "requiredBlockConfirmations": 2,
-  "depositFeePercentage": "0.002",
+  "depositFeePercentage": "0.0",
   "rewardRbtc": "0.0001",
   "rewardThresholds": {
-    "DAIes": "100.0",
-    "USDCes": "100.0",
-    "USDTes": "100.0",
-    "ETHes": "0.025",
-    "es": "0.025",
-    "esETH": "0.025",
-    "DAIbs": "100.0",
-    "USDTbs": "100.0",
-    "USDCbs": "100.0"
+    "DAIes": "99.8",
+    "USDCes": "99.8",
+    "USDTes": "99.8",
+    "ETHes": "0.024",
+    "es": "0.024",
+    "esETH": "0.024",
+    "DAIbs": "99.8",
+    "USDTbs": "99.8",
+    "USDCbs": "99.8"
   },
   "keyStoreFile": "./secrets/testnet_keystore.json"
 }

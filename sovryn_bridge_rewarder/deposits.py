@@ -114,7 +114,7 @@ def parse_deposits_from_events(
     web3: Web3,
     bridge_contract: Contract,
     events: List[Any],
-    fee_percentage: Decimal,  # This is hard to parse from the contract, so just pass it here
+    fee_percentage: Decimal = Decimal(0),  #
 ) -> List[Deposit]:
     # An event looks like this:
     # AttributeDict({
@@ -176,6 +176,7 @@ def parse_deposits_from_events(
 
         amount_minus_fees_decimal = Decimal(amount_minus_fees_wei) / (Decimal(10) ** side_token.decimals)
         amount_decimal = amount_minus_fees_decimal / (Decimal(1) - fee_percentage)
+
         deposit = Deposit(
             user_address=user_address,
             side_token_address=side_token.address,

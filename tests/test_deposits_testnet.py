@@ -205,6 +205,39 @@ def test_parse_deposits_from_event_with_userdata(web3, eth_bridge_contract):
     assert deposit.main_token_address == '0xa1f7efd2b12aba416f1c57b9a54ac92b15c3a792'  # WETH
 
 
+def test_parse_rewards_no_fee(web3, eth_bridge_contract):
+    # Fees are updated to flat fee
+    event = AttributeDict({
+        'address': '0xC0E7A7FfF4aBa5e7286D5d67dD016B719DCc9156',
+        'args': {'_amount': 24000000000000000,
+                 '_calculatedDecimals': 18,
+                 '_calculatedGranularity': 1,
+                 '_decimals': 18,
+                 '_formattedAmount': 24000000000000000,
+                 '_granularity': 1,
+                 '_to': '0xC855FD4aF3526215d37b39Cc33fa3C352d42e6F8',
+                 '_tokenAddress': '0xa1F7EfD2B12aBa416f1c57b9a54AC92B15C3A792',
+                 '_userData': b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+                              b'\x02c\x8d$\xe6\x96\xc7\xff\xf8\xed\x05`:\xfcU\xc5'
+                              b'{\xf2\xc7\xf0'},
+        'blockHash': HexBytes('0x0a4b2f06dc5cad428fe869a3222f548b4929862f8342c0c802b5e62a5e1c671c'),
+        'blockNumber': 1854123,
+        'event': 'AcceptedCrossTransfer',
+        'logIndex': 6,
+        'transactionHash': HexBytes('0x5edd6194a4caa53e5fb0e7ec1e2396486eb0b25274728832a9b5819c6faa58c7'),
+        'transactionIndex': 7
+    })
+    deposits = parse_deposits_from_events(
+        web3=web3,
+        bridge_contract=eth_bridge_contract,
+        events=[event],
+        fee_percentage=Decimal('0.0'),
+    )
+    assert len(deposits) == 1
+    deposit = deposits[0]
+    assert deposit.amount_decimal == Decimal('0.024')
+
+
 EXAMPLE_CROSS_TRANSFER_EVENTS = [
     AttributeDict({
         'address': '0x8E7199D5F496eA862492F4F983A1627D723328fd',

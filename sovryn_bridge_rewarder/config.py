@@ -2,7 +2,7 @@ import os
 from getpass import getpass
 from dataclasses import dataclass, field, fields
 from decimal import Decimal
-from typing import Dict, NewType, Optional
+from typing import Dict, NewType, Optional, Any
 
 from eth_account import Account
 from eth_account.signers.base import BaseAccount
@@ -10,6 +10,7 @@ from eth_utils import is_hex_address
 
 BridgeAddressMap = NewType('RewardThresholdMap', Dict[str, str])
 RewardThresholdMap = NewType('RewardThresholdMap', Dict[str, Decimal])
+UIConfig = NewType('UIConfig', Dict[str, Any])
 
 
 @dataclass()
@@ -26,10 +27,11 @@ class Config:
     sleep_seconds: int = 30
     explorer_url: str = 'https://explorer.rsk.co'
     sentry_dsn: str = ''
+    ui: UIConfig = field(default_factory=dict)
 
     def validate(self):
         for field in fields(self):
-            type_ = dict if field.name in ('bridge_addresses', 'reward_thresholds') else field.type
+            type_ = dict if field.name in ('bridge_addresses', 'reward_thresholds', 'ui') else field.type
             value = getattr(self, field.name, None)
             if value is None:
                 raise ValueError(f'missing value for {field.name}')

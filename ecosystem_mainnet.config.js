@@ -1,0 +1,32 @@
+module.exports = {
+  apps : [
+    {
+      name: 'rewarder-mainnet',
+      cmd: './venv/bin/sovryn_bridge_rewarder',
+      args: 'config_mainnet.json --rewarder --no-ui',
+      pid: './var/pid/mainnet.pid',
+      error_file: './var/log/mainnet/error.log',
+      out_file: './var/log/mainnet/out.log',
+      log_file: './var/log/mainnet/combined.log',
+      interpreter: './venv/bin/python3',
+      cwd: __dirname,
+      watch: false,
+      autorestart: false,
+      instances: 1,
+    },
+    {
+      name: 'rewarder-ui-mainnet',
+      cmd: './venv/bin/sovryn_bridge_rewarder',
+      args: 'config_mainnet.json --no-rewarder --ui',
+      pid: './var/pid/mainnet.pid',
+      error_file: './var/log/mainnet/ui_error.log',
+      out_file: './var/log/mainnet/ui_out.log',
+      log_file: './var/log/mainnet/ui_combined.log',
+      interpreter: './venv/bin/python3',
+      cwd: __dirname,
+      watch: false,
+      autorestart: true,
+      instances: 1,
+    },
+  ],
+};

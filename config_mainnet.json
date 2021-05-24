@@ -1,24 +1,19 @@
 {
   "bridgeAddresses": {
-    "RSK-BSC": "0xb8411dc9b723e322ce08e2596881b77733f0694e",
-    "RSK-ETH": "0xb8411dc9b723e322ce08e2596881b77733f0694e"
+    "RSK-ETH": "0x1ccad820b6d031b41c54f1f3da11c0d48b399581"
   },
   "rpcUrl": "https://mainnet2.sovryn.app/rpc",
   "dbUrl": "postgresql:///bridge_mainnet",
   "explorerUrl": "https://explorer.rsk.co",
-  "xdefaultStartBlock": 3258725,
-  "defaultStartBlock": 3350805,
+  "defaultStartBlock": 3376460,
   "requiredBlockConfirmations": 2,
-  "depositFeePercentage": "0.002",
+  "depositFeePercentage": "0.0",
   "rewardRbtc": "0.0001",
   "rewardThresholds": {
-    "DAIes": "100.0",
-    "USDCes": "100.0",
-    "USDTes": "100.0",
-    "ETHes": "0.025",
-    "DAIbs": "100.0",
-    "USDTbs": "100.0",
-    "USDCbs": "100.0"
+    "ETHes": "0.0499"
   },
-  "keyStoreFile": "./secrets/mainnet_keystore.json"
+  "keyStoreFile": "./secrets/mainnet_keystore.json",
+  "ui": {
+    "port": 8001
+  }
 }

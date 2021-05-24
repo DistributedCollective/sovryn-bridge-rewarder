@@ -85,7 +85,7 @@ def load_from_json(json_dict) -> Config:
             explorer_url=json_dict.get('explorerUrl', Config.explorer_url),
             account=account,
             sentry_dsn=json_dict.get('sentryDsn', Config.sentry_dsn),
-            ui=json_dict.get('ui', Config.ui),
+            ui=json_dict.get('ui', dict()),
         )
     except KeyError as e:
         raise ValueError(f'missing required configuration option: {e.args[0]}')

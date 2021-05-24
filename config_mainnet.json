@@ -10,7 +10,8 @@
   "depositFeePercentage": "0.0",
   "rewardRbtc": "0.0001",
   "rewardThresholds": {
-    "ETHes": "0.0499"
+    "ETHes": "0.049",
+    "esETH": "0.049"
   },
   "keyStoreFile": "./secrets/mainnet_keystore.json",
   "ui": {

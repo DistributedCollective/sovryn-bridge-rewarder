@@ -22,5 +22,8 @@
     "USDTbs": "99.8",
     "USDCbs": "99.8"
   },
-  "keyStoreFile": "./secrets/testnet_keystore.json"
+  "keyStoreFile": "./secrets/testnet_keystore.json",
+  "ui": {
+    "port": 8001
+  }
 }

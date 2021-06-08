@@ -12,7 +12,14 @@
   "rewardRbtc": "0.0001",
   "rewardThresholds": {
     "ETHes": "0.049",
-    "ETHbs": "0.049"
+    "ETHbs": "0.049",
+    "DAIes": "97.0",
+    "USDCes": "97.0",
+    "USDTes": "97.0",
+    "DAIbs": "97.0",
+    "USDCbs": "97.0",
+    "USDTbs": "97.0",
+    "BUSDbs": "97.0"
   },
   "keyStoreFile": "./secrets/mainnet_keystore.json",
   "ui": {
